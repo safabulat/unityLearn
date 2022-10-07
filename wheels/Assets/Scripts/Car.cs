@@ -3,15 +3,17 @@ using System.Collections.Generic;
 using UnityEngine;
 using UnityEngine.SceneManagement;
 using UnityEngine.UI;
+using TMPro;
+
 public class Car : MonoBehaviour
 {
     [SerializeField] private float speed = 20f;
     [SerializeField] private float gainOverTime = 1f;
     [SerializeField] private float turningSpeed = 100f;
 
-    private int SteerRotation, lapsCounter;
+    private int SteerRotation;
+    public static int lapsCounter;
     public Text speedCounterText, lapsCounterText;
-
     // Start is called before the first frame update
     void Start()
     {
@@ -21,10 +23,15 @@ public class Car : MonoBehaviour
     // Update is called once per frame
     void Update()
     {
-        speed += gainOverTime * Time.deltaTime;
+        //speed += gainOverTime * Time.deltaTime;
         transform.Rotate(0f, SteerRotation * turningSpeed * Time.deltaTime, 0f);
         transform.Translate(Vector3.forward * speed * Time.deltaTime);
-        speedCounterText.text = "Speed: " + speed.ToString("F1");
+        speedCounterText.text = "Speed: " + speed.ToString("F1") + "\nSteering: " + turningSpeed.ToString("F0");
+    }
+    private void FixedUpdate()
+    {
+        speed += gainOverTime * Time.deltaTime;
+        turningSpeed += gainOverTime * 5 * Time.deltaTime;
     }
     private void OnTriggerEnter(Collider other)
     {

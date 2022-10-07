@@ -1,39 +1,40 @@
 using System.Collections;
 using System.Collections.Generic;
+using TMPro;
 using UnityEngine;
 using UnityEngine.SceneManagement;
 
 public class Menu : MonoBehaviour
 {
-    // Start is called before the first frame update
-    void Start()
+    public GameObject settingButton;
+
+
+    [SerializeField] private TMP_Text highScoreText;
+    [SerializeField] private TMP_Text maxLapsText;
+    private void Start()
     {
-        
+        int highScore = PlayerPrefs.GetInt(ScoreHandler.HighScoreKey, 0);
+        int maxLap = PlayerPrefs.GetInt(ScoreHandler.MaxLapKey, 0);
+
+        highScoreText.text = "High Score: " + highScore.ToString();
+        maxLapsText.text = "Max Laps: " + maxLap.ToString();
+    }
+    public void Play()
+    {
+        Debug.Log("Loading Game Scene.");
+        SceneManager.LoadScene("Scene_Game");
+    }
+    public void QuitApp()
+    {
+        Debug.Log("Quit.");
+        Application.Quit();   
     }
 
-    // Update is called once per frame
-    void Update()
+    public void GoSettings()
     {
-        
+        settingButton.SetActive(true);
     }
 
-    public void StartButtonPressed(int a)
-    {
-        if (a == 1)
-        {
-            Debug.Log("Start Button Pressed");
-            SceneManager.LoadScene("Scene_Game");
-        }
-    }
-
-    public void QuitButtonPressed(int a)
-    {
-        if (a == 1)
-        {
-            Debug.Log("Quit Button Pressed");
-            Application.Quit();
-        }
-    }
 
     
 }
