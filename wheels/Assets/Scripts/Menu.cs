@@ -10,15 +10,17 @@ public class Menu : MonoBehaviour
 {
     public GameObject settingButton;
 
-    [SerializeField] private TMP_Text highScoreText, maxLapsText, TargetFPSText, energyText;
-    [SerializeField] private int maxEnergy, energyChargeDuration;
+    [SerializeField] AndroidNotificationHandler androidNotificationHandler;
+    [SerializeField] private TMP_Text highScoreText, maxLapsText, TargetFPSText, energyText, debugText;
+    [SerializeField] private int maxEnergy, energyReChargeDuration;
 
     private int energy;
 
     private const string EnergyKey = "Energy";
     private const string EnergyReadyKey = "EnergyReady";
+    private const string FPSKey = "FPSKey";
 
-    private float TargetFrameRate = 60.0f;
+    private int TargetFrameRate = 60;
     private int fpsVal = 0;
     [Header("Frame Settings")]
     int MaxRate = 9999;
@@ -30,10 +32,9 @@ public class Menu : MonoBehaviour
         currentFrameTime = Time.realtimeSinceStartup;
         StartCoroutine("WaitForNextFrame");
         LeanTween.reset();
-        settingButton.LeanMoveLocalY(-1900f, 0.1f);       
-    }
-    private void Start()
-    {
+        settingButton.LeanMoveLocalY(-1900f, 0.1f);
+        TargetFrameRate = PlayerPrefs.GetInt(FPSKey, 60);
+        TargetFPSText.text = "Change FPS: " + TargetFrameRate;
         int highScore = PlayerPrefs.GetInt(ScoreHandler.HighScoreKey, 0);
         int maxLap = PlayerPrefs.GetInt(ScoreHandler.MaxLapKey, 0);
 
@@ -41,28 +42,17 @@ public class Menu : MonoBehaviour
         maxLapsText.text = "Max Laps: " + maxLap.ToString();
 
         energy = PlayerPrefs.GetInt(EnergyKey, maxEnergy);
-
-        if(energy == 0)
-        {
-            string energyReadyString = PlayerPrefs.GetString(EnergyReadyKey, string.Empty);
-
-            if(EnergyReadyKey == string.Empty) { return;  }
-
-            DateTime energyReady = DateTime.Parse(energyReadyString);
-            //TODO fix it.
-            if(DateTime.Now > energyReady)
-            {
-                energy += 1;
-                if(energy >= maxEnergy)
-                {
-                    energy = maxEnergy;
-                }
-                PlayerPrefs.SetInt(EnergyKey, energy);
-
-            }
-        }
         energyText.text = energy.ToString();
 
+        
+    }
+    private void Update()
+    {
+        
+    }
+    private void Start()
+    {
+        InvokeRepeating(nameof(checkEnergy), 0f, 15f);
     }
 
     IEnumerator WaitForNextFrame()
@@ -82,23 +72,28 @@ public class Menu : MonoBehaviour
 
     public void Play()
     {
-        DateTime oneMinFromNow = DateTime.Now.AddMinutes(1);
-        
         if (1 > energy)
         {
             //Not Enough Energy
             Debug.Log("Not Enough Energy, you cant play");
+            debugText.text = "Not Enough Energy, you cant play";
             return;
         }
         energy--;
-        if (0 > energy) { energy = 0; }
-
+        energyText.text = energy.ToString();
         PlayerPrefs.SetInt(EnergyKey, energy);
-        if(maxEnergy > energy)
+
+        if (maxEnergy > energy)
         {
-            //Energy will add-up in x minitos
-            PlayerPrefs.SetString(EnergyReadyKey, oneMinFromNow.ToString());
-            Debug.Log("Energy will zort in: " + oneMinFromNow.ToString());
+            DateTime energyReady = DateTime.Now.AddMinutes(energyReChargeDuration); 
+            //Energy will increase in x minitos
+            PlayerPrefs.SetString(EnergyReadyKey, energyReady.ToString());
+            Debug.Log("Energy will increase at: " + energyReady.ToString());
+            debugText.text = "Energy will increase at: " + energyReady.ToString();
+            
+#if UNITY_ANDROID
+            androidNotificationHandler.ScheduleNotification(energyReady, energyReady.AddMinutes(1));
+#endif
         }
         Debug.Log("Loading Game Scene.");
         SceneManager.LoadScene("Scene_Game");
@@ -122,9 +117,46 @@ public class Menu : MonoBehaviour
             .setEaseInBack()
             .setIgnoreTimeScale(true);
     }
-    public void changeFPSButton()
+    public void checkEnergy()
     {
+        Debug.Log("Invoke: checkEnergy");
+        if (maxEnergy > energy)
+        {
+            string energyReadyString = PlayerPrefs.GetString(EnergyReadyKey, string.Empty);
+            if (EnergyReadyKey == string.Empty) { return; }
+            DateTime energyReady = DateTime.Parse(energyReadyString);
+            DateTime nextEnergyTime;
+            DateTime energyMaxReadyTime = DateTime.Parse(energyReadyString);
 
+            if (DateTime.Now > energyReady)
+            {
+                energy += 1;
+                int needEnergy = maxEnergy - energy;
+                if (needEnergy > 0)
+                {
+                    nextEnergyTime = energyReady.AddMinutes(energyReChargeDuration);
+                }
+                else
+                {
+                    nextEnergyTime = energyReady;
+                }
+                PlayerPrefs.SetString(EnergyReadyKey, nextEnergyTime.ToString());
+                Debug.Log("Energy Ready at: " + energyReady.ToString());
+                Debug.Log("Energy Increased at: " + DateTime.Now.ToString());
+                Debug.Log("Next Energy Increase Time: " + nextEnergyTime.ToString());
+                debugText.text = "Next Energy Increase Time: " + nextEnergyTime.ToString();
+                if (energy >= maxEnergy)
+                {
+                    energy = maxEnergy;
+                }
+                PlayerPrefs.SetInt(EnergyKey, energy);
+
+            }
+
+
+        }
+
+        energyText.text = energy.ToString();
     }
     public void changeFPS()
     {
@@ -139,21 +171,19 @@ public class Menu : MonoBehaviour
         {
             case 0:
                 TargetFrameRate = 60;
-                TargetFPSText.text = "Change FPS: 60";
                 break;
             case 1:
                 TargetFrameRate = 90;
-                TargetFPSText.text = "Change FPS: 90";
                 break;
             case 2:
                 TargetFrameRate = 120;
-                TargetFPSText.text = "Change FPS: 120";
                 break;
             default:
                 TargetFrameRate = 60;
-                TargetFPSText.text = "Change FPS: 60";
                 break;
         }
+        PlayerPrefs.SetInt(EnergyReadyKey, TargetFrameRate);
+        TargetFPSText.text = "Change FPS: " + TargetFrameRate;
     }
     
 }
