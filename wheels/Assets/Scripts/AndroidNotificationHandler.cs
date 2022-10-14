@@ -10,7 +10,7 @@ public class AndroidNotificationHandler : MonoBehaviour
 {
 #if UNITY_ANDROID
     private const string ChannelID = "notification_channel";
-    public void ScheduleNotification(DateTime energyIncreased, DateTime energyFullDate)
+    public void ScheduleNotification(DateTime timeEnergyIncreased, int notificationIndex)
     {
         AndroidNotificationChannel notificationChannel = new AndroidNotificationChannel()
         {
@@ -28,7 +28,7 @@ public class AndroidNotificationHandler : MonoBehaviour
             Text = "Dare to try again? You have energy now!",
             SmallIcon = "default",
             LargeIcon = "default",
-            FireTime = energyIncreased,
+            FireTime = timeEnergyIncreased,
             
 
         };
@@ -39,13 +39,26 @@ public class AndroidNotificationHandler : MonoBehaviour
             Text = "Not around eh? You have full energy now! Another round maybe?",
             SmallIcon = "default",
             LargeIcon = "default",
-            FireTime = energyFullDate,
+            FireTime = timeEnergyIncreased,
 
         };
+        switch (notificationIndex)
+        {
+            case 0:
+                AndroidNotificationCenter.SendNotification(androidNotificationEnergyIncreased, ChannelID);
+                Debug.Log("androidNotificationEnergyIncreased fired");
+                break;
+            case 1:
+                AndroidNotificationCenter.SendNotification(androidNotificationEnergyFull, ChannelID);
+                Debug.Log("androidNotificationEnergyFull fired");
+                break;
+            default:
+                Debug.Log("no default notification");
+                break;
+        }
+        //AndroidNotificationCenter.SendNotification(androidNotificationEnergyIncreased, ChannelID);
 
-        AndroidNotificationCenter.SendNotification(androidNotificationEnergyIncreased, ChannelID);
-
-        AndroidNotificationCenter.SendNotification(androidNotificationEnergyFull, ChannelID);
+        //AndroidNotificationCenter.SendNotification(androidNotificationEnergyFull, ChannelID);
 
     }
 #endif

@@ -10,11 +10,29 @@ public class Car : MonoBehaviour
     [SerializeField] private float speed = 20f;
     [SerializeField] private float gainOverTime = 1f;
     [SerializeField] private float turningSpeed = 100f;
+    
+    public GameObject deathScreenPOP;
 
     private int SteerRotation;
     public static int lapsCounter;
-    public Text speedCounterText, lapsCounterText;
-    // Start is called before the first frame update
+
+    private float _fpsTimer;
+    private int isFPSshow, adCount =0;
+    [SerializeField] private TMP_Text _fpsText, HUDText, energyText;
+    [SerializeField] private Button playAgainButton, continueOnAd, adBTN;
+    private const string showFPSKey = "showFPS";
+    public GameObject showfpslabel;
+
+    Vector3 currentPosition;
+    private void Awake()
+    {
+        deathScreenPOP.LeanMoveLocalX(-1200f, 0.1f);
+        isFPSshow = PlayerPrefs.GetInt(showFPSKey, 0);
+        if(isFPSshow == 1) { showfpslabel.SetActive(true); }
+        else { showfpslabel.SetActive(false); }
+        
+
+    }
     void Start()
     {
         lapsCounter = 0;
@@ -26,7 +44,12 @@ public class Car : MonoBehaviour
         //speed += gainOverTime * Time.deltaTime;
         transform.Rotate(0f, SteerRotation * turningSpeed * Time.deltaTime, 0f);
         transform.Translate(Vector3.forward * speed * Time.deltaTime);
-        speedCounterText.text = "Speed: " + speed.ToString("F1") + "\nSteering: " + turningSpeed.ToString("F0");
+        currentPosition = transform.localPosition;
+        HUDText.text = "Speed: " + speed.ToString("F1") + "\nSteering: " + turningSpeed.ToString("F0") + "\nLaps: " + lapsCounter.ToString("F0");
+        if(isFPSshow == 1)
+        {
+            FPSCounter();
+        }
     }
     private void FixedUpdate()
     {
@@ -37,13 +60,13 @@ public class Car : MonoBehaviour
     {
         if (other.CompareTag("Obstacle"))
         {
-            Debug.Log("Collision");
-            SceneManager.LoadScene("Scene_MainMenu");
+            Debug.Log("Obstacle.");
+            continueOnAd.interactable = false;
+            DeathScreenMenu();
         }
         else if (other.CompareTag("Finish"))
         {
             lapsCounter++;
-            lapsCounterText.text = lapsCounter.ToString();
         }
         else
         {
@@ -56,27 +79,93 @@ public class Car : MonoBehaviour
         SteerRotation = rotationVal;
     }
 
-    public void MenuButtonPressed(int a)
+    public void MenuButtonPressed()
     {
-        if(a == 1)
+        toggleTimeScale();
+    }
+
+    public void quitToMenu()
+    {
+        SceneManager.LoadScene("Scene_MainMenu");
+        toggleTimeScale();
+    }
+    public void playAgain()
+    {
+        int energy = PlayerPrefs.GetInt("Energy", 0);
+        PlayerPrefs.SetInt("Energy", --energy);
+
+        SceneManager.LoadScene("Scene_Game");
+        toggleTimeScale();
+    }
+    public void adWatch()
+    {
+        adCount++;
+        if(adCount >= 2)
         {
-            Debug.Log("Menu Button Pressed");
-            toggleTimeScale();
+            adCount = 0;
+            adBTN.interactable = false;
+        }
+        continueOnAd.interactable = true;
+    }
+    public void adToContinue()
+    {
+        float x, y, z;
+        x = currentPosition.x;
+        y = currentPosition.y;
+        z = currentPosition.z - 20f;
+        Vector3 resetPosition = new Vector3(x,y,z); 
+        transform.SetPositionAndRotation(resetPosition, Quaternion.identity);
+        closeDeathScreenMenu();
+        
+    }
+    void toggleTimeScale()
+    {
+        if(Time.timeScale == 0){ Time.timeScale = 1; }
+        else { Time.timeScale = 0; }
+    }
+
+    void FPSCounter()
+    {
+        if (Time.unscaledTime > _fpsTimer)
+        {
+            int fps = (int)(1f / Time.unscaledDeltaTime);
+            _fpsText.text = "FPS: " + fps;
+            _fpsTimer = Time.unscaledTime + 1f;
         }
     }
 
-    void toggleTimeScale()
+    void OnDestroy()
     {
-        if(Time.timeScale == 0)
-        {
-            Time.timeScale = 1;
-            
-        }
-        else
-        {
-            Time.timeScale = 0;
-        }
-        Debug.Log("TimeScale: " + Time.timeScale);
+
+    }
+
+    public void DeathScreenMenu()
+    {
+        toggleTimeScale();
+        deathScreenPOP.LeanMoveLocalX(0f, 0.7f)
+        .setEaseOutBack()
+        .setIgnoreTimeScale(true);
+
+        int energy = PlayerPrefs.GetInt("Energy", 0);
+        energyText.text = energy.ToString();
+        if (energy > 0) { playAgainButton.interactable = true; }
+        else { playAgainButton.interactable = false; }
+    }
+
+    public void closeDeathScreenMenu()
+    {
+        deathScreenPOP.LeanMoveLocalX(-1200f, 0.3f)
+        .setEaseInBack()
+        .setIgnoreTimeScale(true);
+        //TODO wait x seconds and continue game
+        Time.timeScale = 1;
+        
+    }
+
+    IEnumerator Waiter()
+    {
+        yield return new WaitForSecondsRealtime(3);
+        Debug.Log("zort timescale sifir olunca bu da calismiyor");
 
     }
 }

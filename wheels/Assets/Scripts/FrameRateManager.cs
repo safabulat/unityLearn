@@ -4,11 +4,14 @@ using UnityEngine;
 public class FrameRateManager : MonoBehaviour
 {
     [SerializeField] public float TargetFrameRate = 60.0f;
+    private const string FPSKey = "FPSKey";
+
     [Header("Frame Settings")]
     int MaxRate = 9999;
     float currentFrameTime;
     void Awake()
     {
+        TargetFrameRate = PlayerPrefs.GetInt(FPSKey, 60);
         QualitySettings.vSyncCount = 0;
         Application.targetFrameRate = MaxRate;
         currentFrameTime = Time.realtimeSinceStartup;
@@ -19,7 +22,7 @@ public class FrameRateManager : MonoBehaviour
         while (true)
         {
             yield return new WaitForEndOfFrame();
-            currentFrameTime += 1.0f / TargetFrameRate;
+            currentFrameTime += 1.0f / TargetFrameRate;  
             var t = Time.realtimeSinceStartup;
             var sleepTime = currentFrameTime - t - 0.01f;
             if (sleepTime > 0)
