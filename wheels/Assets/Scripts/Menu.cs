@@ -53,7 +53,10 @@ public class Menu : MonoBehaviour
         int maxLap = PlayerPrefs.GetInt(ScoreHandler.MaxLapKey, 0);
         highScoreText.text = "High Score: " + highScore.ToString();
         maxLapsText.text = "Max Laps: " + maxLap.ToString();
-
+        //Energy Invoke
+        string energyReadyString = PlayerPrefs.GetString(EnergyTimerReadyKey, DateTime.Now.AddMinutes(energyReChargeDuration).ToString());
+        DateTime energyTime = DateTime.Parse(energyReadyString);
+        InvokeRepeating(nameof(handleEnergyTemp), 0f, 15f);
     }
     private void Update()
     {
@@ -66,49 +69,66 @@ public class Menu : MonoBehaviour
         OnApplicationFocus(true);
         //Check Energy
         Debug.Log("start");//InvokeRepeating
+
     }
 
     private void OnApplicationFocus(bool hasFocus)
     {
         if (!hasFocus) { return; }
-        CancelInvoke(nameof(chargeEnergy)); 
-
         energy = PlayerPrefs.GetInt(EnergyKey, maxEnergy);
         energyText.text = energy.ToString();
 
         if(energy > 0) { playBTN.interactable = true; }
         else { playBTN.interactable = false; }
-
-        if (maxEnergy > energy)
-        {           
-            string energyReadyString = PlayerPrefs.GetString(EnergyTimerReadyKey, string.Empty);
-            if(energyReadyString == string.Empty) { return; }
-            DateTime energyReady = DateTime.Parse(energyReadyString);
-            if(DateTime.Now > energyReady)
-            {
-                chargeEnergy();
-                PlayerPrefs.SetString(EnergyTimerReadyKey, nextEnergyTime.ToString());
-            }
-            else
-            {
-                Invoke(nameof(chargeEnergy), (energyReady - DateTime.Now).Seconds);
-            }
-        }
     }
-    public void chargeEnergy()
+    public void chargeEnergy(DateTime energyTime)
     {
         energy++;
         if(energy > maxEnergy) { energy = maxEnergy; }
         PlayerPrefs.SetInt(EnergyKey, energy);
         energyText.text = energy.ToString();
+
+        if(energy == maxEnergy)
+        {
+#if UNITY_ANDROID
+            androidNotificationHandler.ScheduleNotification(energyTime, 1);
+#endif
+        }
+        else
+        {
+#if UNITY_ANDROID
+            androidNotificationHandler.ScheduleNotification(energyTime, 0);
+#endif
+        }
+
     }
-    public void checkEnergy()
+    public void handleEnergy(DateTime enterTime, DateTime nextEnterTime)
     {
-  
+        Debug.Log("handleEnergy called at :" + DateTime.Now);
+        string energyReadyString = PlayerPrefs.GetString(EnergyTimerReadyKey, nextEnterTime.ToString());
+        DateTime energyReady = DateTime.Parse(energyReadyString); 
+
+        if (enterTime > energyReady)
+        {            
+            chargeEnergy(nextEnterTime);
+            PlayerPrefs.SetString(EnergyTimerReadyKey, nextEnterTime.ToString());
+            Debug.Log("NextCharge:" + nextEnterTime.ToString());
+        }
+        else
+        {
+            Invoke(nameof(handleEnergyTemp), (energyReady - enterTime).Seconds);
+        }
+
+
     }
-    public void manageEnergyTimers(int energyNeed)
+    public void handleEnergyTemp()
     {
-        
+        energy = PlayerPrefs.GetInt(EnergyKey, maxEnergy);
+        energyText.text = energy.ToString();
+        if (maxEnergy > energy)
+        {
+            handleEnergy(DateTime.Now, DateTime.Now.AddMinutes(energyReChargeDuration));
+        }
     }
     IEnumerator WaitForNextFrame()
     {
@@ -126,28 +146,12 @@ public class Menu : MonoBehaviour
     }
     public void Play()
     {
+        //energy = PlayerPrefs.GetInt(EnergyKey, maxEnergy);
         if (1 > energy){ playBTN.interactable = false; return; } 
         energy--;
 
         energyText.text = energy.ToString();
         PlayerPrefs.SetInt(EnergyKey, energy);
-
-        if (maxEnergy > energy)
-        {
-            string energyReadyString = PlayerPrefs.GetString(EnergyTimerReadyKey, string.Empty);
-            if (energyReadyString == string.Empty) { return; }
-            DateTime energyReady = DateTime.Parse(energyReadyString);
-            if(energyReady >= nextEnergyTime)
-            {
-                energyReady = DateTime.Now.AddMinutes(energyReChargeDuration);
-                PlayerPrefs.SetString(EnergyTimerReadyKey, energyReady.ToString());
-                nextEnergyTime = energyReady.AddMinutes(energyReChargeDuration);
-#if UNITY_ANDROID
-                androidNotificationHandler.ScheduleNotification(energyReady, 0);
-#endif
-            }
-
-        }
 
         Debug.Log("Loading Game Scene.");
         SceneManager.LoadScene("Scene_Game");
