@@ -14,8 +14,9 @@ public class Menu : MonoBehaviour
     [SerializeField] AndroidNotificationHandler androidNotificationHandler;
     [SerializeField] private TMP_Text highScoreText, maxLapsText, TargetFPSText, showFPSText, energyText;
     [SerializeField] private int maxEnergy, energyReChargeDuration;
-    [SerializeField] private Button playBTN, musicBTN, sfxBTN, showFpsBTN;
+    [SerializeField] private Button playBTN, musicBTN, sfxBTN, showFpsBTN, adBTN;
 
+    private bool isEnergyCalled = false;
     private int energy;
     DateTime nextEnergyTime = DateTime.Now;
 
@@ -54,32 +55,41 @@ public class Menu : MonoBehaviour
         highScoreText.text = "High Score: " + highScore.ToString();
         maxLapsText.text = "Max Laps: " + maxLap.ToString();
         //Energy Invoke
-        string energyReadyString = PlayerPrefs.GetString(EnergyTimerReadyKey, DateTime.Now.AddMinutes(energyReChargeDuration).ToString());
-        DateTime energyTime = DateTime.Parse(energyReadyString);
-        InvokeRepeating(nameof(handleEnergyTemp), 0f, 15f);
+        //string energyReadyString = PlayerPrefs.GetString(EnergyTimerReadyKey, DateTime.Now.AddMinutes(energyReChargeDuration).ToString());
+        //DateTime energyTime = DateTime.Parse(energyReadyString);
+        //InvokeRepeating(nameof(handleEnergyTemp), 0f, 15f);
+    }
+
+    private void FixedUpdate()
+    {
+        if(maxEnergy > energy && !isEnergyCalled)
+        {
+            handleEnergy(maxEnergy - energy);
+        }
     }
     private void Update()
     {
-        
+
     }
 
     private void Start()
     {
-        //Go Stuff
-        OnApplicationFocus(true);
-        //Check Energy
-        Debug.Log("start");//InvokeRepeating
+        energy = PlayerPrefs.GetInt(EnergyKey, maxEnergy);
+        energyText.text = energy.ToString();
 
+        if (energy > 0) { playBTN.interactable = true; }
+        else { playBTN.interactable = false; }
+        if (energy == maxEnergy) { adBTN.interactable = false; }
+        else { adBTN.interactable = true; }
     }
 
     private void OnApplicationFocus(bool hasFocus)
     {
-        if (!hasFocus) { return; }
-        energy = PlayerPrefs.GetInt(EnergyKey, maxEnergy);
-        energyText.text = energy.ToString();
 
-        if(energy > 0) { playBTN.interactable = true; }
-        else { playBTN.interactable = false; }
+    }
+    public void energyTimers()
+    {
+
     }
     public void chargeEnergy(DateTime energyTime)
     {
@@ -87,47 +97,33 @@ public class Menu : MonoBehaviour
         if(energy > maxEnergy) { energy = maxEnergy; }
         PlayerPrefs.SetInt(EnergyKey, energy);
         energyText.text = energy.ToString();
-
-        if(energy == maxEnergy)
-        {
-#if UNITY_ANDROID
-            androidNotificationHandler.ScheduleNotification(energyTime, 1);
-#endif
-        }
-        else
-        {
-#if UNITY_ANDROID
-            androidNotificationHandler.ScheduleNotification(energyTime, 0);
-#endif
-        }
-
+        if (!playBTN.interactable) { playBTN.interactable = true; }
+        isEnergyCalled = false;
     }
-    public void handleEnergy(DateTime enterTime, DateTime nextEnterTime)
+    public void handleEnergy(int neededEnergy)
     {
+        isEnergyCalled = true;
         Debug.Log("handleEnergy called at :" + DateTime.Now);
-        string energyReadyString = PlayerPrefs.GetString(EnergyTimerReadyKey, nextEnterTime.ToString());
-        DateTime energyReady = DateTime.Parse(energyReadyString); 
 
-        if (enterTime > energyReady)
-        {            
-            chargeEnergy(nextEnterTime);
-            PlayerPrefs.SetString(EnergyTimerReadyKey, nextEnterTime.ToString());
-            Debug.Log("NextCharge:" + nextEnterTime.ToString());
-        }
-        else
-        {
-            Invoke(nameof(handleEnergyTemp), (energyReady - enterTime).Seconds);
-        }
-
-
+        DateTime nextEnergy = DateTime.Now.AddMinutes(energyReChargeDuration);
+        chargeEnergy(nextEnergy);
+        handleNotificationFires(nextEnergy);
     }
     public void handleEnergyTemp()
     {
-        energy = PlayerPrefs.GetInt(EnergyKey, maxEnergy);
-        energyText.text = energy.ToString();
-        if (maxEnergy > energy)
-        {
-            handleEnergy(DateTime.Now, DateTime.Now.AddMinutes(energyReChargeDuration));
+
+    }
+    public void handleNotificationFires(DateTime NotificationTime)
+    {
+        if(energy == maxEnergy) { 
+#if UNITY_ANDROID
+            androidNotificationHandler.ScheduleNotification(NotificationTime, 1);
+#endif
+        }
+        else { 
+#if UNITY_ANDROID
+        androidNotificationHandler.ScheduleNotification(NotificationTime, 0);
+#endif
         }
     }
     IEnumerator WaitForNextFrame()
@@ -217,7 +213,10 @@ public class Menu : MonoBehaviour
         PlayerPrefs.SetInt(FPSKey, TargetFrameRate);
         TargetFPSText.text = "Change FPS: " + TargetFrameRate;
     }
-
+    public void adToEnergy()
+    {
+        chargeEnergy(DateTime.Now);
+    }
     public void showFPStoggle()
     {
         if(isFPSshow == 0)
