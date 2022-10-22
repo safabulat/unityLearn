@@ -42,15 +42,26 @@ public class AndroidNotificationHandler : MonoBehaviour
             FireTime = timeEnergyIncreased,
 
         };
+        AndroidNotification androidNotificationTry = new AndroidNotification
+        {
+            Title = "Energy z0000000rrttt",
+            Text = "Not around z0rt?",
+            SmallIcon = "default",
+            LargeIcon = "default",
+            FireTime = timeEnergyIncreased,
+
+        };
+        AndroidNotificationCenter.SendNotification(androidNotificationTry, ChannelID);
+
         switch (notificationIndex)
         {
             case 0:
                 AndroidNotificationCenter.SendNotification(androidNotificationEnergyIncreased, ChannelID);
-                Debug.Log("androidNotificationEnergyIncreased fired");
+                Debug.Log("androidNotificationEnergyIncreased will fired at: " + timeEnergyIncreased);
                 break;
             case 1:
                 AndroidNotificationCenter.SendNotification(androidNotificationEnergyFull, ChannelID);
-                Debug.Log("androidNotificationEnergyFull fired");
+                Debug.Log("androidNotificationEnergyFull will fired at: " + timeEnergyIncreased);
                 break;
             default:
                 Debug.Log("no default notification");

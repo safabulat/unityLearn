@@ -2662,6 +2662,7 @@ GameObject:
   - component: {fileID: 1563037573}
   - component: {fileID: 1563037574}
   - component: {fileID: 1563037575}
+  - component: {fileID: 1563037576}
   m_Layer: 0
   m_Name: MenuHandler
   m_TagString: Untagged
@@ -2698,19 +2699,15 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   popSettings: {fileID: 249523342}
-  androidNotificationHandler: {fileID: 1563037575}
   highScoreText: {fileID: 1998507992}
   maxLapsText: {fileID: 795599124}
   TargetFPSText: {fileID: 1770503215}
   showFPSText: {fileID: 519972152}
   energyText: {fileID: 1118320746}
-  maxEnergy: 5
-  energyReChargeDuration: 1
-  playBTN: {fileID: 14044167}
   musicBTN: {fileID: 2023660537}
   sfxBTN: {fileID: 205442301}
   showFpsBTN: {fileID: 1387894081}
-  adBTN: {fileID: 1929741331}
+  playBTN: {fileID: 14044167}
 --- !u!114 &1563037575
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -2723,6 +2720,23 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 176c3da7e52fc3048b602000872dedc4, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
+--- !u!114 &1563037576
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1563037572}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: a81ef966cd006e644acf77ac30a434bc, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  androidNotificationHandler: {fileID: 1563037575}
+  maxEnergy: 5
+  energyReChargeDuration: 1
+  adBTN: {fileID: 1929741331}
+  energyText: {fileID: 1118320746}
 --- !u!1 &1593316954
 GameObject:
   m_ObjectHideFlags: 0
@@ -3473,8 +3487,8 @@ MonoBehaviour:
   m_OnClick:
     m_PersistentCalls:
       m_Calls:
-      - m_Target: {fileID: 1563037574}
-        m_TargetAssemblyTypeName: Menu, Assembly-CSharp
+      - m_Target: {fileID: 1563037576}
+        m_TargetAssemblyTypeName: energyHandler, Assembly-CSharp
         m_MethodName: adToEnergy
         m_Mode: 1
         m_Arguments:

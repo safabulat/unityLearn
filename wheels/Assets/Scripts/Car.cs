@@ -23,7 +23,11 @@ public class Car : MonoBehaviour
     private const string showFPSKey = "showFPS";
     public GameObject showfpslabel;
 
-    Vector3 currentPosition;
+    private bool isRewinding = false;
+    public float recordTime = 0.5f;
+    List<PointInTime> pointsInTime;
+    Rigidbody rb;
+
     private void Awake()
     {
         deathScreenPOP.LeanMoveLocalX(-1200f, 0.1f);
@@ -36,6 +40,8 @@ public class Car : MonoBehaviour
     void Start()
     {
         lapsCounter = 0;
+        pointsInTime = new List<PointInTime>();
+        rb = GetComponent<Rigidbody>();
     }
 
     // Update is called once per frame
@@ -44,17 +50,25 @@ public class Car : MonoBehaviour
         //speed += gainOverTime * Time.deltaTime;
         transform.Rotate(0f, SteerRotation * turningSpeed * Time.deltaTime, 0f);
         transform.Translate(Vector3.forward * speed * Time.deltaTime);
-        currentPosition = transform.localPosition;
         HUDText.text = "Speed: " + speed.ToString("F1") + "\nSteering: " + turningSpeed.ToString("F0") + "\nLaps: " + lapsCounter.ToString("F0");
         if(isFPSshow == 1)
         {
             FPSCounter();
         }
+        
     }
     private void FixedUpdate()
     {
         speed += gainOverTime * Time.deltaTime;
-        turningSpeed += gainOverTime * 5 * Time.deltaTime;
+        turningSpeed += gainOverTime * 3 * Time.deltaTime;
+        if (isRewinding)
+        {
+            Rewind();
+        }
+        else
+        {
+            Record();
+        }
     }
     private void OnTriggerEnter(Collider other)
     {
@@ -109,14 +123,9 @@ public class Car : MonoBehaviour
     }
     public void adToContinue()
     {
-        float x, y, z;
-        x = currentPosition.x;
-        y = currentPosition.y;
-        z = currentPosition.z - 20f;
-        Vector3 resetPosition = new Vector3(x,y,z); 
-        transform.SetPositionAndRotation(resetPosition, Quaternion.identity);
+        StartRewinding();
         closeDeathScreenMenu();
-        
+        //rewindTimeHandler.StopRewinding();
     }
     void toggleTimeScale()
     {
@@ -154,9 +163,7 @@ public class Car : MonoBehaviour
 
     public void closeDeathScreenMenu()
     {
-        deathScreenPOP.LeanMoveLocalX(-1200f, 0.3f)
-        .setEaseInBack()
-        .setIgnoreTimeScale(true);
+        deathScreenPOP.transform.Translate(new Vector3(-1200f, 0f, 0f));
         //TODO wait x seconds and continue game
         Time.timeScale = 1;
         
@@ -167,5 +174,53 @@ public class Car : MonoBehaviour
         yield return new WaitForSecondsRealtime(3);
         Debug.Log("zort timescale sifir olunca bu da calismiyor");
 
+    }
+
+    public void ToggleRewind()
+    {
+        if (!isRewinding)
+        {
+            isRewinding = true;
+        }
+
+        //else
+        //{
+        //    isRewinding = false;       
+        //}
+
+        Debug.Log("." + isRewinding);
+    }
+    public void StartRewinding()
+    {
+        isRewinding = true;
+        //rb.isKinematic = true;
+    }
+    public void StopRewinding()
+    {
+        isRewinding = false;
+        //rb.isKinematic = false;
+    }
+    public void Rewind()
+    {
+        if(pointsInTime.Count > 0)
+        {
+            PointInTime pointInTime = pointsInTime[0];
+            transform.position = pointInTime.position;
+            transform.rotation = pointInTime.rotation;
+            pointsInTime.RemoveAt(0);
+        }
+        else
+        {
+            StopRewinding();
+        }
+
+    }
+    public void Record()
+    {   
+        if(pointsInTime.Count > Mathf.Round(recordTime / Time.fixedDeltaTime))
+        {
+            pointsInTime.RemoveAt(pointsInTime.Count - 1);
+        }
+        pointsInTime.Insert(0, new PointInTime(transform.position, transform.rotation));
     }
 }
