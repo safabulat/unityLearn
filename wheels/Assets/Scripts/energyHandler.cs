@@ -23,7 +23,16 @@ public class energyHandler : MonoBehaviour
 
     private void Awake()
     {
-        
+        string energyReadyString = PlayerPrefs.GetString(EnergyTimerReadyKey, DateTime.Now.AddMinutes(energyReChargeDuration).ToString());
+        energyIncreaseTime = DateTime.Parse(energyReadyString);
+        Debug.Log("energyIncreaseTime" + energyIncreaseTime.ToString());
+        if (energyIncreaseTime < DateTime.Now)
+        {
+            Debug.Log("Energy time is less: " + energyIncreaseTime.ToString());
+            energyIncreaseTime = DateTime.Now.AddMinutes(energyReChargeDuration);
+            PlayerPrefs.SetString(EnergyTimerReadyKey, energyIncreaseTime.ToString());
+            Debug.Log("Energy time is changed to: " + energyIncreaseTime.ToString());
+        }
     }
     void Start()
     {
@@ -31,7 +40,20 @@ public class energyHandler : MonoBehaviour
     }
     private void FixedUpdate()
     {
-        if(maxEnergy > energy && !isIncreaseCalled && DateTime.Now >= energyIncreaseTime)
+
+    }
+    void UpdateEveryXSecond()
+    {
+        //Get all the energy related values everysecond.
+        
+        string energyReadyString = PlayerPrefs.GetString(EnergyTimerReadyKey, DateTime.Now.AddMinutes(energyReChargeDuration).ToString());
+        energyIncreaseTime = DateTime.Parse(energyReadyString);
+        
+        nextEnergyIncreaseTime = energyIncreaseTime.AddMinutes(energyReChargeDuration);
+        energy = PlayerPrefs.GetInt(EnergyKey, maxEnergy);
+        energyText.text = energy.ToString();
+
+        if (maxEnergy > energy && !isIncreaseCalled && DateTime.Now >= energyIncreaseTime)
         {
             Debug.Log("xx");
             Debug.Log("maxE: " + maxEnergy);
@@ -43,22 +65,7 @@ public class energyHandler : MonoBehaviour
             handleEnergy(neededEnergy);
 
         }
-    }
-    void UpdateEveryXSecond()
-    {
-        //Get all the energy related values everysecond.
 
-        string energyReadyString = PlayerPrefs.GetString(EnergyTimerReadyKey, DateTime.Now.AddMinutes(energyReChargeDuration).ToString());
-        if (energyIncreaseTime < DateTime.Now)
-        {
-            energyIncreaseTime = DateTime.Now.AddMinutes(energyReChargeDuration);
-            PlayerPrefs.SetString(EnergyTimerReadyKey, energyIncreaseTime.ToString());
-        }
-        energyIncreaseTime = DateTime.Parse(energyReadyString);
-        nextEnergyIncreaseTime = energyIncreaseTime.AddMinutes(energyReChargeDuration);
-        energy = PlayerPrefs.GetInt(EnergyKey, maxEnergy);
-        energyText.text = energy.ToString();
-        
         if (energy != maxEnergy) { adBTN.interactable = true; }
     }
     public void handleEnergy(int neededEnergy)

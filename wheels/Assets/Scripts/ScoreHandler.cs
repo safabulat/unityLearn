@@ -5,7 +5,8 @@ using UnityEngine;
 
 public class ScoreHandler : MonoBehaviour
 {
-    // Start is called before the first frame update
+    [SerializeField] Car rwHandler;
+
     public const string HighScoreKey = "HighScore";
     public const string MaxLapKey = "MaxLap";
   
@@ -18,9 +19,13 @@ public class ScoreHandler : MonoBehaviour
     // Update is called once per frame
     void Update()
     {
-        score += Time.deltaTime * scoreMultiplier;
-        scoreText.text = Mathf.FloorToInt(score).ToString();
-        maxLap = Car.lapsCounter;
+        if (!rwHandler.isRewinding)
+        {
+            score += Time.deltaTime * scoreMultiplier;
+            scoreText.text = Mathf.FloorToInt(score).ToString();
+            maxLap = Car.lapsCounter;
+        }
+
     }
 
     private void OnDestroy()

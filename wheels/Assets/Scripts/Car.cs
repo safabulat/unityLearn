@@ -24,7 +24,7 @@ public class Car : MonoBehaviour
     private const string showFPSKey = "showFPS";
     public GameObject showfpslabel;
 
-    private bool isRewinding = false;
+    public bool isRewinding = false;
     public float rewindRecordTime = 2f;
     List<PointInTime> pointsInTime;
 
@@ -60,8 +60,6 @@ public class Car : MonoBehaviour
     }
     private void FixedUpdate()
     {
-        speed += gainOverTime * Time.deltaTime;
-        turningSpeed += gainOverTime * 3 * Time.deltaTime;
         if (isRewinding)
         {
             Rewind();
@@ -69,6 +67,8 @@ public class Car : MonoBehaviour
         else
         {
             Record();
+            speed += gainOverTime * Time.deltaTime;
+            turningSpeed += gainOverTime * 3 * Time.deltaTime;
         }
     }
     private void OnTriggerEnter(Collider other)
@@ -194,7 +194,9 @@ public class Car : MonoBehaviour
     }
     public void CloseMenuScreen()
     {
-        menuScreenPOP.transform.Translate(new Vector3(-1200f, 0f, 0f));
+        menuScreenPOP.LeanMoveLocalX(-1200f, 0.7f)
+         .setEaseOutBack()
+         .setIgnoreTimeScale(true);
         Time.timeScale = 1;
     }
     //Rewind Methods

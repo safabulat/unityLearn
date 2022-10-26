@@ -8380,6 +8380,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 6af5a7923d6564a41a632d5aecd73a4c, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
+  rwHandler: {fileID: 1271370829}
   scoreMultiplier: 1
   scoreText: {fileID: 94619597}
 --- !u!4 &1185486575 stripped
@@ -8903,6 +8904,7 @@ MonoBehaviour:
   continueOnAd: {fileID: 1472563917}
   adBTN: {fileID: 1353812426}
   showfpslabel: {fileID: 1013893946}
+  isRewinding: 0
   rewindRecordTime: 2
 --- !u!54 &1271370830
 Rigidbody:
