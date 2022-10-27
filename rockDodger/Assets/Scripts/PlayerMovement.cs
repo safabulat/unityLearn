@@ -5,7 +5,7 @@ using UnityEngine.InputSystem;
 //using Touch = UnityEngine.InputSystem.EnhancedTouch.Touch;
 public class PlayerMovement : MonoBehaviour
 {
-    [SerializeField] private float forceMagnitude, maxVelocity;
+    [SerializeField] private float forceMagnitude, maxVelocity, rotationSpeed;
 
     private Camera mainCamera;
     private Rigidbody rb;
@@ -19,6 +19,21 @@ public class PlayerMovement : MonoBehaviour
 
     
     void Update()
+    {
+        ProcessInput();
+        KeepPlayerOnScreen();
+        RotatesToFaceVelocity();
+    }
+
+
+    private void FixedUpdate()
+    {
+        if(movementDirection == Vector3.zero) { return; }
+
+        rb.AddForce(movementDirection * forceMagnitude * Time.deltaTime, ForceMode.Force);
+        rb.velocity = Vector3.ClampMagnitude(rb.velocity, maxVelocity);
+    }
+    private void ProcessInput()
     {
         if (Touchscreen.current.primaryTouch.press.isPressed)
         {
@@ -37,12 +52,40 @@ public class PlayerMovement : MonoBehaviour
         }
         //Debug.Log("shipPos: " + transform.position);
     }
-
-    private void FixedUpdate()
+    private void KeepPlayerOnScreen()
     {
-        if(movementDirection == Vector3.zero) { return; }
+        Vector3 newPosition = transform.position;
+        Vector3 viewPortPosition = mainCamera.WorldToViewportPoint(transform.position);
 
-        rb.AddForce(movementDirection * forceMagnitude * Time.deltaTime, ForceMode.Force);
-        rb.velocity = Vector3.ClampMagnitude(rb.velocity, maxVelocity);
+        if(viewPortPosition.x > 1)
+        {
+            newPosition.x = -newPosition.x + 0.1f;
+        }
+        else if(viewPortPosition.x < 0)
+        {
+            newPosition.x = -newPosition.x - 0.1f;
+        }
+        else if (viewPortPosition.y > 1)
+        {
+            newPosition.y = -newPosition.y + 0.1f;
+        }
+        else if (viewPortPosition.y < 0)
+        {
+            newPosition.y = -newPosition.y - 0.1f;
+        }
+
+        transform.position = newPosition;
+
+    }
+
+    private void RotatesToFaceVelocity()
+    {
+        if (rb.velocity == Vector3.zero) { return; }
+
+        Quaternion targetRotation = Quaternion.LookRotation(rb.velocity, Vector3.back);
+        transform.rotation = Quaternion.Lerp(
+            transform.rotation, targetRotation, rotationSpeed * Time.deltaTime
+            );
+
     }
 }
