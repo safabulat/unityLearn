@@ -2,10 +2,12 @@ using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
 using UnityEngine.InputSystem;
-//using Touch = UnityEngine.InputSystem.EnhancedTouch.Touch;
+
 public class PlayerMovement : MonoBehaviour
 {
     [SerializeField] private float forceMagnitude, maxVelocity, rotationSpeed;
+
+    private PlayerInput playerInput;
 
     private Camera mainCamera;
     private Rigidbody rb;
@@ -15,6 +17,8 @@ public class PlayerMovement : MonoBehaviour
     {
         rb = GetComponent<Rigidbody>();
         mainCamera = Camera.main;
+        playerInput = GetComponent<PlayerInput>();
+
     }
 
     
@@ -28,21 +32,19 @@ public class PlayerMovement : MonoBehaviour
 
     private void FixedUpdate()
     {
-        if(movementDirection == Vector3.zero) { return; }
+        if (movementDirection == Vector3.zero) { return; }
 
         rb.AddForce(movementDirection * forceMagnitude * Time.deltaTime, ForceMode.Force);
         rb.velocity = Vector3.ClampMagnitude(rb.velocity, maxVelocity);
     }
     private void ProcessInput()
     {
-        if (Touchscreen.current.primaryTouch.press.isPressed)
+
+        if (playerInput.actions["Move"].triggered)
         {
-            Vector2 touchPos = Touchscreen.current.primaryTouch.position.ReadValue();
-            Vector3 worldPos = mainCamera.ScreenToViewportPoint(touchPos);
-
-            Debug.Log("touchPos: " + touchPos + "\nworldPos: " + worldPos);
-
-            movementDirection = transform.position - worldPos;
+            Vector2 input = playerInput.actions["Move"].ReadValue<Vector2>();
+            Vector3 move = new Vector3(input.x, input.y, 0);
+            movementDirection = move;
             movementDirection.z = 0f;
             movementDirection.Normalize();
         }
@@ -50,7 +52,6 @@ public class PlayerMovement : MonoBehaviour
         {
             movementDirection = Vector3.zero;
         }
-        //Debug.Log("shipPos: " + transform.position);
     }
     private void KeepPlayerOnScreen()
     {

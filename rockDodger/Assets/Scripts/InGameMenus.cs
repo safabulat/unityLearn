@@ -4,6 +4,8 @@ using UnityEngine;
 using UnityEngine.SceneManagement;
 using TMPro;
 using UnityEngine.UI;
+using Unity.Services.Mediation;
+using Unity.Example;
 
 public class InGameMenus : MonoBehaviour
 {
@@ -16,18 +18,29 @@ public class InGameMenus : MonoBehaviour
     private string highScoreKey = "HighScore";
     private float score;
     private int highScore;
-    public bool isGameOn = true;
+    public bool isGameOn = true, isAdRewarded = false;
 
-    // Start is called before the first frame update
+    private RewardedAds rewardedAds;
+
     void Start()
     {
         highScore = PlayerPrefs.GetInt(highScoreKey, 0);
+        continueButton.interactable = false;
     }
 
     // Update is called once per frame
     void Update()
     {
-        if (!isGameOn) { endGameUIHandler.SetActive(true); return; }
+        if (!isGameOn) 
+        { 
+            endGameUIHandler.SetActive(true); return;
+        }
+        else if( isGameOn && !endGameUIHandler.activeSelf) 
+        {
+            endGameUIHandler.SetActive(false); 
+        }
+
+
         score += Time.deltaTime * scoreMultiplier;
         scoreText.text = Mathf.FloorToInt(score).ToString();
         if(score >= highScore) { highScore = Mathf.FloorToInt(score); PlayerPrefs.SetInt(highScoreKey, highScore); }
@@ -37,8 +50,15 @@ public class InGameMenus : MonoBehaviour
     public void PauseGame()
     {
         //Pause the game
-        if(Time.timeScale == 0) { Time.timeScale = 1; }
-        else { Time.timeScale = 0; }
+        if(Time.timeScale == 0)     //Continue
+        {
+            Time.timeScale = 1;
+        }
+        else                        //Stop
+        {                     
+            Time.timeScale = 0;
+        }
+
     }
     //EndGame UI
     public void PlayAgain()
@@ -49,11 +69,7 @@ public class InGameMenus : MonoBehaviour
     {
         SceneManager.LoadScene("MenuScene");
     }
-    public void ContinueOnAD()
-    {
-        AdManager.Instance.ShowAd(this);
-        continueButton.interactable = false;
-    }
+
 
     public void GameOver()
     {
@@ -63,15 +79,15 @@ public class InGameMenus : MonoBehaviour
 
     public void ContinueGame()
     {
+
+        continueButton.interactable = false;
         isGameOn = true;
         asteroidSpawner.enabled = true;
         player.GetComponent<Rigidbody>().velocity = Vector3.zero;
         player.transform.position = Vector3.zero;
         player.SetActive(true);
 
-
         endGameUIHandler.SetActive(false);
-        
 
     }
 }
