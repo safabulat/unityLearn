@@ -4,7 +4,7 @@ using UnityEngine;
 using UnityEngine.SceneManagement;
 using TMPro;
 using UnityEngine.UI;
-using Unity.Services.Mediation;
+//using Unity.Services.Mediation;
 using Unity.Example;
 
 public class InGameMenus : MonoBehaviour
@@ -19,8 +19,6 @@ public class InGameMenus : MonoBehaviour
     private float score;
     private int highScore;
     public bool isGameOn = true, isAdRewarded = false;
-
-    private RewardedAds rewardedAds;
 
     void Start()
     {

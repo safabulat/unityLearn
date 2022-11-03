@@ -1,21 +1,28 @@
 using System.Collections;
 using System.Collections.Generic;
+using TMPro;
 using UnityEngine;
 using UnityEngine.InputSystem;
 
 public class PlayerMovement : MonoBehaviour
 {
+    public GameObject misillePrefab, spawnPoint;
     [SerializeField] private float forceMagnitude, maxVelocity, rotationSpeed;
-
+    [SerializeField] TMP_Text bulletText;
+    [SerializeField] int scoreMultiplier;
     private PlayerInput playerInput;
 
     private Camera mainCamera;
-    private Rigidbody rb;
+    private Rigidbody rbShip, rbBullet;
     private Vector3 movementDirection;
+
+    private float bulletCountFilter;
+    private int bulletsCount;
+
 
     void Start()
     {
-        rb = GetComponent<Rigidbody>();
+        rbShip = GetComponent<Rigidbody>();
         mainCamera = Camera.main;
         playerInput = GetComponent<PlayerInput>();
 
@@ -27,6 +34,14 @@ public class PlayerMovement : MonoBehaviour
         ProcessInput();
         KeepPlayerOnScreen();
         RotatesToFaceVelocity();
+
+        bulletCountFilter += Time.deltaTime * scoreMultiplier;
+        if (bulletCountFilter >= 10f)
+        {
+            bulletCountFilter = 0;
+            bulletsCount++;            
+        }
+        bulletText.text = Mathf.FloorToInt(bulletsCount).ToString();
     }
 
 
@@ -34,8 +49,8 @@ public class PlayerMovement : MonoBehaviour
     {
         if (movementDirection == Vector3.zero) { return; }
 
-        rb.AddForce(movementDirection * forceMagnitude * Time.deltaTime, ForceMode.Force);
-        rb.velocity = Vector3.ClampMagnitude(rb.velocity, maxVelocity);
+        rbShip.AddForce(movementDirection * forceMagnitude * Time.deltaTime, ForceMode.Force);
+        rbShip.velocity = Vector3.ClampMagnitude(rbShip.velocity, maxVelocity);
     }
     private void ProcessInput()
     {
@@ -53,6 +68,28 @@ public class PlayerMovement : MonoBehaviour
             movementDirection = Vector3.zero;
         }
     }
+
+    public void FireBullet()
+    {
+        if(bulletsCount > 0)
+        {
+            bulletsCount--;
+            Firing();
+        }
+        else
+        {
+            Debug.Log("NoBullet");
+        }
+    }
+
+    void Firing()
+    {
+        rbBullet = Instantiate(misillePrefab, spawnPoint.transform.position, Quaternion.identity).GetComponent<Rigidbody>();
+        rbBullet.AddForce(transform.forward * 25f, ForceMode.Impulse);
+        //rbBullet.velocity = Vector3.ClampMagnitude(rbBullet.velocity, maxVelocity);
+
+    }
+
     private void KeepPlayerOnScreen()
     {
         Vector3 newPosition = transform.position;
@@ -81,9 +118,9 @@ public class PlayerMovement : MonoBehaviour
 
     private void RotatesToFaceVelocity()
     {
-        if (rb.velocity == Vector3.zero) { return; }
+        if (rbShip.velocity == Vector3.zero) { return; }
 
-        Quaternion targetRotation = Quaternion.LookRotation(rb.velocity, Vector3.back);
+        Quaternion targetRotation = Quaternion.LookRotation(rbShip.velocity, Vector3.back);
         transform.rotation = Quaternion.Lerp(
             transform.rotation, targetRotation, rotationSpeed * Time.deltaTime
             );

@@ -15,4 +15,9 @@ public class Astroids : MonoBehaviour
     {
         Destroy(gameObject);
     }
+
+    public void Destroyed()
+    {
+        Destroy(gameObject);
+    }
 }
