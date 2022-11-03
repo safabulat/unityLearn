@@ -6,7 +6,8 @@ using UnityEngine.InputSystem;
 
 public class PlayerMovement : MonoBehaviour
 {
-    public GameObject misillePrefab, spawnPoint;
+    public GameObject misillePrefab;
+    public GameObject[] spawnPoints;
     [SerializeField] private float forceMagnitude, maxVelocity, rotationSpeed;
     [SerializeField] TMP_Text bulletText;
     [SerializeField] int scoreMultiplier;
@@ -84,9 +85,12 @@ public class PlayerMovement : MonoBehaviour
 
     void Firing()
     {
-        rbBullet = Instantiate(misillePrefab, spawnPoint.transform.position, Quaternion.identity).GetComponent<Rigidbody>();
-        rbBullet.AddForce(transform.forward * 25f, ForceMode.Impulse);
-        //rbBullet.velocity = Vector3.ClampMagnitude(rbBullet.velocity, maxVelocity);
+        for(int i = 0; i < spawnPoints.Length; i++)
+        {
+            rbBullet = Instantiate(misillePrefab, spawnPoints[i].transform.position, Quaternion.identity).GetComponent<Rigidbody>();
+            rbBullet.AddForce(spawnPoints[i].transform.forward * 25f, ForceMode.Impulse);
+            rbBullet.velocity = Vector3.ClampMagnitude(rbBullet.velocity, maxVelocity);
+        }
 
     }
 
